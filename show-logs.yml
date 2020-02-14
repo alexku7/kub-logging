@@ -2,81 +2,44 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: fluentdconf
+  name: nginxconfig
 data:
-  fluent.conf: |
-   <source>
-     @type tail
-     path /var/log/containers/log*.log
-     tag imubit.*
-     pos_file /var/log/fluentd-containers.log.pos
-     format /(?<message>.*)$/
-     read_from_head true
-     path_key tailed_path
-   </source>
+  default.conf: |
+    server {
+      listen       80;
+      server_name  localhost;
+      #charset koi8-r;
+      access_log  /var/log/nginx/host.access.log  main;
 
-   <match kubernetes.var.log.containers.**fluentd**.log>
-     @type null
-   </match>
+      location / {
+          root   /etc/kub-logs;
+          autoindex on;
+       }
 
-   <filter imubit.**>
-     @type record_transformer
-     enable_ruby true
-     <record>
-       tailed_path ${File.basename(record["tailed_path"])}
-     </record>
-   </filter>
+      }
 
-
-   <match imubit.**>
-     @type mongo
-     host "#{ENV['MONGO_HOST']}"
-     port "#{ENV['MONGO_PORT']}"
-     database "#{ENV['MONGO_DB']}"
-     collection "#{ENV['MONGO_COLL']}"
-     
-     # authentication
-   #  user someuser
-   #  password somepass
-
-     <inject>
-       time_key time
-     </inject>
-
-     <buffer>
-       flush_interval 10s
-     </buffer>
-
-   </match>
 ---
-
-
-
-
-
-
-
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
-  name: fluentd-mongo
+  name: show-logs
   labels:
-    k8s-app: fluentd-logging
+    app: show-logs
 spec:
   selector:
     matchLabels:
-      name: fluentd-mongo
+      name: show-logs
   template:
     metadata:
       labels:
-        name: fluentd-mongo
+        name: show-logs
     spec:
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        effect: NoSchedule
       containers:
-      - name: fluentd-mongo
-        image: alexkurtser/fluentd:1.5
+      - name: show-logs
+        image: alexkurtser/show-logs:1.1
+        ports:
+        - containerPort: 80
+          name: nginx
         env:
         - name: MONGO_HOST
           value: "service-mongodb"
@@ -93,21 +56,12 @@ spec:
             cpu: 100m
             memory: 200Mi
         volumeMounts:
-        - name: fluentconfig
-          mountPath: /fluentd/etc/
-        - name: varliblogs
-          mountPath: /var/log/containers
-          readOnly: true
-        - name: genlogfolder
-          mountPath: /var/log
+        - name: nginxconfig
+          mountPath: /etc/nginx/conf.d/
       terminationGracePeriodSeconds: 30
       volumes:
-      - name: varliblogs
-        hostPath:
-          path: /var/log/containers
-      - name: genlogfolder
-        hostPath:
-          path: /var/log
-      - name: fluentconfig
+      - name: nginxconfig
         configMap:
-          name: fluentdconf
+          name: nginxconfig
+
+

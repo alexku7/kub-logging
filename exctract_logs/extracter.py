@@ -8,10 +8,10 @@ import glob
 import os
 
 #print(os.environ['HOME'])
-mongo_host="10.152.183.139"
-mongo_port="27017"
-mongo_db="imubit"
-mongo_coll="logs"
+mongo_host=os.getenv("MONGO_HOST")
+mongo_port=os.getenv("MONGO_PORT")
+mongo_db=os.getenv("MONGO_DB")
+mongo_coll=os.getenv("MONGO_COLL")
 days_to_subtract=7
 root_folder="/etc/kub-logs/"
 
@@ -42,7 +42,7 @@ def extract_logs():
         short_date="{:%Y-%m-%d}".format(my_date)
         my_name=short_date + "-" + my_name
         f = open(root_folder + my_name, "a")
-        f.write(x["message"])
+        f.write(x["message"]+"\n")
         f.close()
     print(coll.count())
     print (target_date)  

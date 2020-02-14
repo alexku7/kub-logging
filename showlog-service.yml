@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-showlogs
+  labels:
+    app: service-showlogs
+spec:
+  ports:
+  - port: 3000
+    protocol: TCP
+    targetPort: 80
+    nodePort: 30080
+  selector:
+    name: show-logs
+  type: NodePort
+
