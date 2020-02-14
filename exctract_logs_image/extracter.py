@@ -6,8 +6,10 @@ import json
 from datetime import datetime, timedelta
 import glob
 import os
+import tempfile
+import shutil
+import time
 
-#print(os.environ['HOME'])
 mongo_host=os.getenv("MONGO_HOST")
 mongo_port=os.getenv("MONGO_PORT")
 mongo_db=os.getenv("MONGO_DB")
@@ -28,25 +30,33 @@ def create_mongoDB_conn():
    coll = db[mongo_coll]
  
  
-def extract_logs():
+def extract_logs(cycle,days):
     print ("start select")
-    
-    target_date = datetime.utcnow() - timedelta(days_to_subtract)
+    if cycle:
+      folder = tempfile.mkdtemp() + "/"
+    else:
+      folder=root_folder
+    target_date = datetime.utcnow() - timedelta(days)
     print (target_date)
                    
     logs= coll.find({"time": {"$gt": target_date }})
     for x in logs:
         my_date=x["time"]
         my_name=x["tailed_path"]
-
+        
         short_date="{:%Y-%m-%d}".format(my_date)
         my_name=short_date + "-" + my_name
-        f = open(root_folder + my_name, "a")
+        f = open(folder + my_name, "a")
         f.write(x["message"]+"\n")
         f.close()
     print(coll.count())
     print (target_date)  
-
+    files = glob.glob(folder+"*")
+    if cycle:
+       for f in files:
+          shutil.copyfile(f,root_folder)
+          os.remove(f)
+     
 
 files = glob.glob(root_folder+"*")
 for f in files:
@@ -54,5 +64,8 @@ for f in files:
 
 
 create_mongoDB_conn()
-extract_logs()
+extract_logs(False,days_to_subtract)
  
+while True:
+    time.sleep(120)
+    extract_logs(True,1)
