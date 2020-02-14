@@ -1,0 +1,113 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentdconf
+data:
+  fluent.conf: |
+   <source>
+     @type tail
+     path /var/log/containers/log*.log
+     tag imubit.*
+     pos_file /var/log/fluentd-containers.log.pos
+     format /(?<message>.*)$/
+     read_from_head true
+     path_key tailed_path
+   </source>
+
+   <match kubernetes.var.log.containers.**fluentd**.log>
+     @type null
+   </match>
+
+   <filter imubit.**>
+     @type record_transformer
+     enable_ruby true
+     <record>
+       tailed_path ${File.basename(record["tailed_path"])}
+     </record>
+   </filter>
+
+
+   <match imubit.**>
+     @type mongo
+     host "#{ENV['MONGO_HOST']}"
+     port "#{ENV['MONGO_PORT']}"
+     database "#{ENV['MONGO_DB']}"
+     collection "#{ENV['MONGO_COLL']}"
+     
+     # authentication
+   #  user someuser
+   #  password somepass
+
+     <inject>
+       time_key time
+     </inject>
+
+     <buffer>
+       flush_interval 10s
+     </buffer>
+
+   </match>
+---
+
+
+
+
+
+
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd-mongo
+  labels:
+    k8s-app: fluentd-logging
+spec:
+  selector:
+    matchLabels:
+      name: fluentd-mongo
+  template:
+    metadata:
+      labels:
+        name: fluentd-mongo
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: fluentd-mongo
+        image: alexkurtser/fluentd:1.5
+        env:
+        - name: MONGO_HOST
+          value: "service-mongodb"
+        - name:  MONGO_PORT
+          value: "27017"
+        - name:  MONGO_DB
+          value: "imubit"
+        - name:  MONGO_COLL
+          value: "logs"
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - name: fluentconfig
+          mountPath: /fluentd/etc/
+        - name: varliblogs
+          mountPath: /var/log/containers
+          readOnly: true
+        - name: genlogfolder
+          mountPath: /var/log
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: varliblogs
+        hostPath:
+          path: /var/log/containers
+      - name: genlogfolder
+        hostPath:
+          path: /var/log
+      - name: fluentconfig
+        configMap:
+          name: fluentdconf
