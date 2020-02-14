@@ -54,7 +54,7 @@ def extract_logs(cycle,days):
     files = glob.glob(folder+"*")
     if cycle:
        for f in files:
-          shutil.copyfile(f,root_folder)
+          shutil.copy(f,root_folder)
           os.remove(f)
      
 

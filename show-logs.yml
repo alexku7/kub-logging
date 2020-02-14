@@ -36,7 +36,7 @@ spec:
     spec:
       containers:
       - name: show-logs
-        image: alexkurtser/show-logs:1.4
+        image: alexkurtser/show-logs:1.5
         ports:
         - containerPort: 80
           name: nginx
