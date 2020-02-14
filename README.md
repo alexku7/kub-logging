@@ -29,7 +29,7 @@ The folder exctract_logs_image containes a docker file and other custom scripts 
 3. kubectl apply -f mongodb.yml 
 
  create a daemonSet  running custom fluentd container   which monitors containers logs, tags them and stores in the mongodb
-4. kubectl apply -f fluent.yml 
+ 4. kubectl apply -f fluent.yml 
 
 create a service of type ClusterIP for access mongodb statefullset
 5. kubectl apply -f mongodb-service.yml  
