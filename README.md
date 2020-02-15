@@ -17,6 +17,8 @@ For simulating log activity i Used dummy images from public hub repository. Thes
 The folder fluentd-image containes a docker file and default fluentd configuration for building fluentd custom image with mongodb plugin.
 The folder exctract_logs_image containes a docker file and other custom python script for building custom nginx image with python script which performs for extracting logs from the mongodb to the flat files.
 
+All difinitions are divieded to separated YAML files for convinience only. 
+
 # Install steps:
 
 1. kubectl apply -f log-generator.yml           # create  a deployment with 2 replicas of dummy log generators images
