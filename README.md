@@ -9,13 +9,13 @@ This example performs the fllowing tasks:
 
 All part of example are running on containers within kuberneteds platform.
 
-This example assumes that you already have kubernetis running and properly functioning.
+This example assumes that you already have a running and properly functioning kubernetes platfrom.
 
-For preparing this example i used microk8s platform.
+For preparing this example i used a microk8s platform.
 For simulating log activity i Used dummy images from public hub repository. These images generate dummy logs every few seconds.
 
 The folder fluentd-image containes a docker file and default fluentd configuration for building fluentd custom image with mongodb plugin.
-The folder exctract_logs_image containes a docker file and other custom scripts for building custom nginx image with python script which performs for extracting logs from the mongodb to the flat files.
+The folder exctract_logs_image containes a docker file and other custom python script for building custom nginx image with python script which performs for extracting logs from the mongodb to the flat files.
 
 # Install steps:
 
